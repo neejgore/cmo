@@ -4,15 +4,15 @@ import { NextResponse } from 'next/server'
 import { getTikTokTrends } from '../../../lib/services/tiktok'
 import { getMetaAds } from '../../../lib/services/meta'
 import { getGoogleTrends } from '../../../lib/services/google-trends'
-import { RedditService } from '../../../lib/services/reddit'
+// import { RedditService } from '../../../lib/services/reddit'
 import { RSSService } from '../../../lib/services/rss'
 import { AnalyticsService } from '../../../lib/services/analytics'
-import { prisma } from '../../../lib/prisma'
 import { getTwitterMentions } from '../../../lib/services/twitter'
 import { getExplodingTopics } from '../../../lib/services/exploding-topics'
 import { getAdbeatData } from '../../../lib/services/adbeat'
 import { getMailChartsCampaigns } from '../../../lib/services/mailcharts'
 import { interpretInsights } from '../../../lib/services/interpretation'
+import { prisma } from '../../../lib/prisma'
 
 export async function GET(request: Request) {
   try {
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     }
 
     // Initialize services
-    const redditService = new RedditService()
+    // const redditService = new RedditService()
     const rssService = new RSSService()
     const analyticsService = new AnalyticsService()
 
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       tiktokTrends,
       metaAds,
       googleTrends,
-      redditMentions,
+      // redditMentions,
       appleUpdates,
       privacyUpdates,
       martechUpdates,
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       getTikTokTrends(),
       getMetaAds(brandName),
       getGoogleTrends([brandName, ...brandName.split(' ')]),
-      redditService.getBrandMentions(brandName),
+      // redditService.getBrandMentions(brandName),
       rssService.getAppleUpdates(),
       rssService.getPrivacySandboxUpdates(),
       rssService.getMartechUpdates(),
@@ -92,42 +92,6 @@ export async function GET(request: Request) {
             source: 'Meta',
             data: JSON.parse(JSON.stringify(ad)) as any,
           })),
-          ...redditMentions.map(mention => ({
-            workspaceId: workspace.id,
-            title: `Reddit Mention: ${mention.title}`,
-            summary: `${mention.sentiment} sentiment in r/${mention.subreddit}`,
-            confidence: 0.7,
-            source: 'Reddit',
-            data: JSON.parse(JSON.stringify(mention)) as any,
-          })),
-
-          // Industry Updates
-          ...appleUpdates.map(update => ({
-            workspaceId: workspace.id,
-            title: `Apple Update: ${update.title}`,
-            summary: update.content.substring(0, 200),
-            confidence: 0.95,
-            source: 'Apple Developer News',
-            data: JSON.parse(JSON.stringify(update)) as any,
-          })),
-          ...privacyUpdates.map(update => ({
-            workspaceId: workspace.id,
-            title: `Privacy Update: ${update.title}`,
-            summary: update.content.substring(0, 200),
-            confidence: 0.9,
-            source: 'Chromium Blog',
-            data: JSON.parse(JSON.stringify(update)) as any,
-          })),
-          ...martechUpdates.map(update => ({
-            workspaceId: workspace.id,
-            title: `Martech Update: ${update.title}`,
-            summary: update.content.substring(0, 200),
-            confidence: 0.85,
-            source: update.source,
-            data: JSON.parse(JSON.stringify(update)) as any,
-          })),
-
-          // Analytics Insights
           ...(trafficData ? [{
             workspaceId: workspace.id,
             title: 'Traffic Analysis',
@@ -160,7 +124,7 @@ export async function GET(request: Request) {
       tiktokTrends,
       metaAds,
       googleTrends,
-      redditMentions,
+      // redditMentions,
       appleUpdates,
       privacyUpdates,
       martechUpdates,
@@ -179,7 +143,7 @@ export async function GET(request: Request) {
       social: {
         tiktokTrends,
         metaAds,
-        redditMentions,
+        // redditMentions,
         twitterMentions,
       },
       industry: {

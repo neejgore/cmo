@@ -1,4 +1,4 @@
-import { Snoowrap } from 'snoowrap'
+import Snoowrap from 'snoowrap'
 
 interface RedditMention {
   id: string

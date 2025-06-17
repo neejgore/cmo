@@ -8,7 +8,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 const queryClient = new QueryClient()
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const sessionData = useSession()
+  const session = sessionData?.data
   const brandName = session?.user?.email?.split('@')[1]?.split('.')[0] || ''
   const domain = session?.user?.email?.split('@')[1] || ''
 

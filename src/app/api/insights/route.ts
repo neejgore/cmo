@@ -9,7 +9,7 @@ import { AnalyticsService } from '../../../lib/services/analytics'
 import { getTwitterMentions } from '../../../lib/services/twitter'
 import { getExplodingTopics } from '../../../lib/services/exploding-topics'
 import { getAdbeatData } from '../../../lib/services/adbeat'
-import { getMailChartsCampaigns } from '../../../lib/services/mailcharts'
+// import { getMailChartsCampaigns } from '../../../lib/services/mailcharts'
 import { interpretInsights } from '../../../lib/services/interpretation'
 import { prisma } from '../../../lib/prisma'
 
@@ -38,14 +38,14 @@ export async function GET(request: Request) {
       appleUpdates,
       privacyUpdates,
       martechUpdates,
-      emailCampaigns,
+      // emailCampaigns,
       trafficData,
       adSpendData,
       competitorAnalysis,
       twitterMentions,
       explodingTopics,
       adbeatData,
-      mailChartsCampaigns
+      // mailChartsCampaigns
     ] = await Promise.all([
       // getTikTokTrends(),
       // getMetaAds(brandName),
@@ -53,14 +53,14 @@ export async function GET(request: Request) {
       rssService.getAppleUpdates(),
       rssService.getPrivacySandboxUpdates(),
       rssService.getMartechUpdates(),
-      rssService.getEmailCampaigns(domain),
+      // rssService.getEmailCampaigns(domain),
       analyticsService.getTrafficData(domain),
       analyticsService.getAdSpendData(domain),
       analyticsService.getCompetitorAnalysis(domain),
       getTwitterMentions(brandName),
       getExplodingTopics(brandName),
       getAdbeatData(domain),
-      getMailChartsCampaigns(domain)
+      // getMailChartsCampaigns(domain)
     ])
 
     // Store insights in database
@@ -123,14 +123,14 @@ export async function GET(request: Request) {
       appleUpdates,
       privacyUpdates,
       martechUpdates,
-      emailCampaigns,
+      // emailCampaigns,
       trafficData,
       adSpendData,
       competitorAnalysis,
       twitterMentions,
       explodingTopics,
       adbeatData,
-      mailChartsCampaigns
+      // mailChartsCampaigns
     }
     const intelligence = await interpretInsights(rawResults)
 
@@ -153,8 +153,8 @@ export async function GET(request: Request) {
         adbeatData,
       },
       email: {
-        campaigns: emailCampaigns,
-        mailChartsCampaigns,
+        // campaigns: emailCampaigns,
+        // mailChartsCampaigns,
       },
       intelligence,
     })

@@ -6,6 +6,11 @@ import { RedditService } from '../../../lib/services/reddit'
 import { RSSService } from '../../../lib/services/rss'
 import { AnalyticsService } from '../../../lib/services/analytics'
 import { prisma } from '../../../lib/prisma'
+import { getTwitterMentions } from '../../../lib/services/twitter'
+import { getExplodingTopics } from '../../../lib/services/exploding-topics'
+import { getAdbeatData } from '../../../lib/services/adbeat'
+import { getMailChartsCampaigns } from '../../../lib/services/mailcharts'
+import { interpretInsights } from '../../../lib/services/interpretation'
 
 export async function GET(request: Request) {
   try {
@@ -37,7 +42,11 @@ export async function GET(request: Request) {
       emailCampaigns,
       trafficData,
       adSpendData,
-      competitorAnalysis
+      competitorAnalysis,
+      twitterMentions,
+      explodingTopics,
+      adbeatData,
+      mailChartsCampaigns
     ] = await Promise.all([
       getTikTokTrends(),
       getMetaAds(brandName),
@@ -49,7 +58,11 @@ export async function GET(request: Request) {
       rssService.getEmailCampaigns(domain),
       analyticsService.getTrafficData(domain),
       analyticsService.getAdSpendData(domain),
-      analyticsService.getCompetitorAnalysis(domain)
+      analyticsService.getCompetitorAnalysis(domain),
+      getTwitterMentions(brandName),
+      getExplodingTopics(brandName),
+      getAdbeatData(domain),
+      getMailChartsCampaigns(domain)
     ])
 
     // Store insights in database
@@ -141,25 +154,49 @@ export async function GET(request: Request) {
       })
     }
 
+    const rawResults = {
+      tiktokTrends,
+      metaAds,
+      googleTrends,
+      redditMentions,
+      appleUpdates,
+      privacyUpdates,
+      martechUpdates,
+      emailCampaigns,
+      trafficData,
+      adSpendData,
+      competitorAnalysis,
+      twitterMentions,
+      explodingTopics,
+      adbeatData,
+      mailChartsCampaigns
+    }
+    const intelligence = await interpretInsights(rawResults)
+
     return NextResponse.json({
       social: {
         tiktokTrends,
         metaAds,
         redditMentions,
+        twitterMentions,
       },
       industry: {
         appleUpdates,
         privacyUpdates,
         martechUpdates,
+        explodingTopics,
       },
       analytics: {
         trafficData,
         adSpendData,
         competitorAnalysis,
+        adbeatData,
       },
       email: {
         campaigns: emailCampaigns,
+        mailChartsCampaigns,
       },
+      intelligence,
     })
   } catch (error) {
     console.error('Error fetching insights:', error)

@@ -1,17 +1,16 @@
 'use client'
 
 import React from 'react'
-import { useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import InsightsGrid from '../../components/insights/InsightsGrid'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient()
 
 export default function DashboardPage() {
-  const sessionData = useSession()
-  const session = sessionData?.data
-  const brandName = session?.user?.email?.split('@')[1]?.split('.')[0] || ''
-  const domain = session?.user?.email?.split('@')[1] || ''
+  const searchParams = useSearchParams();
+  const brandName = searchParams.get('brand') || '';
+  const domain = searchParams.get('domain') || '';
 
   return (
     <QueryClientProvider client={queryClient}>

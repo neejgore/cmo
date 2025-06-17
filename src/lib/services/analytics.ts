@@ -42,6 +42,10 @@ export class AnalyticsService {
   }
 
   async getTrafficData(domain: string): Promise<TrafficData | null> {
+    if (!this.similarWebApiKey) {
+      console.warn('SimilarWeb API key missing. Skipping traffic data fetch.')
+      return null
+    }
     try {
       const response = await axios.get(
         `https://api.similarweb.com/v1/website/${domain}/total-traffic-and-engagement/visits`,
@@ -67,6 +71,10 @@ export class AnalyticsService {
   }
 
   async getAdSpendData(domain: string): Promise<AdSpendData | null> {
+    if (!this.adbeatApiKey) {
+      console.warn('Adbeat API key missing. Skipping ad spend data fetch.')
+      return null
+    }
     try {
       const response = await axios.get(
         `https://api.adbeat.com/v1/domain/${domain}/ad-spend`,
@@ -97,6 +105,10 @@ export class AnalyticsService {
     overlap: number
     marketShare: number
   } | null> {
+    if (!this.similarWebApiKey) {
+      console.warn('SimilarWeb API key missing. Skipping competitor analysis fetch.')
+      return null
+    }
     try {
       const response = await axios.get(
         `https://api.similarweb.com/v1/website/${domain}/competitors`,

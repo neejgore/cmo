@@ -42,32 +42,8 @@ export class AnalyticsService {
   }
 
   async getTrafficData(domain: string): Promise<TrafficData | null> {
-    if (!this.similarWebApiKey) {
-      console.warn('SimilarWeb API key missing. Skipping traffic data fetch.')
-      return null
-    }
-    try {
-      const response = await axios.get(
-        `https://api.similarweb.com/v1/website/${domain}/total-traffic-and-engagement/visits`,
-        {
-          headers: {
-            'api-key': this.similarWebApiKey,
-          },
-        }
-      )
-
-      return {
-        totalVisits: response.data.visits,
-        uniqueVisitors: response.data.uniqueVisitors,
-        pagesPerVisit: response.data.pagesPerVisit,
-        avgVisitDuration: response.data.avgVisitDuration,
-        bounceRate: response.data.bounceRate,
-        trafficSources: response.data.trafficSources,
-      }
-    } catch (error) {
-      console.error('Error fetching SimilarWeb data:', error)
-      return null
-    }
+    // SimilarWeb integration temporarily disabled
+    return null;
   }
 
   async getAdSpendData(domain: string): Promise<AdSpendData | null> {
@@ -105,28 +81,7 @@ export class AnalyticsService {
     overlap: number
     marketShare: number
   } | null> {
-    if (!this.similarWebApiKey) {
-      console.warn('SimilarWeb API key missing. Skipping competitor analysis fetch.')
-      return null
-    }
-    try {
-      const response = await axios.get(
-        `https://api.similarweb.com/v1/website/${domain}/competitors`,
-        {
-          headers: {
-            'api-key': this.similarWebApiKey,
-          },
-        }
-      )
-
-      return {
-        competitors: response.data.competitors,
-        overlap: response.data.overlap,
-        marketShare: response.data.marketShare,
-      }
-    } catch (error) {
-      console.error('Error fetching competitor analysis:', error)
-      return null
-    }
+    // SimilarWeb integration temporarily disabled
+    return null;
   }
 } 

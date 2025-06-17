@@ -1,5 +1,5 @@
-import { spawn } from 'child_process'
-import path from 'path'
+// @ts-ignore: No types for google-trends-api
+import googleTrends from 'google-trends-api';
 
 interface TrendData {
   keyword: string
@@ -8,33 +8,14 @@ interface TrendData {
 }
 
 export async function getGoogleTrends(keywords: string[]): Promise<TrendData[]> {
-  return new Promise((resolve, reject) => {
-    const pythonScript = path.join(process.cwd(), 'scripts', 'get_trends.py')
-    const pythonProcess = spawn('python3', [pythonScript, JSON.stringify(keywords)])
-    
-    let output = ''
-    let error = ''
-    
-    pythonProcess.stdout.on('data', (data) => {
-      output += data.toString()
-    })
-    
-    pythonProcess.stderr.on('data', (data) => {
-      error += data.toString()
-    })
-    
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python script failed: ${error}`))
-        return
-      }
-      
-      try {
-        const trends = JSON.parse(output)
-        resolve(trends)
-      } catch (e) {
-        reject(new Error('Failed to parse Python script output'))
-      }
-    })
-  })
+  try {
+    const results = await googleTrends.interestOverTime({
+      keyword: keywords,
+      startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // last 30 days
+    });
+    return JSON.parse(results);
+  } catch (error) {
+    console.error('Google Trends error:', error);
+    return [];
+  }
 } 

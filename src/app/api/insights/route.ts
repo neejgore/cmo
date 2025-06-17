@@ -1,10 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from 'next/server'
-import { getTikTokTrends } from '../../../lib/services/tiktok'
-import { getMetaAds } from '../../../lib/services/meta'
+// import { getTikTokTrends } from '../../../lib/services/tiktok'
+// import { getMetaAds } from '../../../lib/services/meta'
 import { getGoogleTrends } from '../../../lib/services/google-trends'
-// import { RedditService } from '../../../lib/services/reddit'
 import { RSSService } from '../../../lib/services/rss'
 import { AnalyticsService } from '../../../lib/services/analytics'
 import { getTwitterMentions } from '../../../lib/services/twitter'
@@ -28,16 +27,14 @@ export async function GET(request: Request) {
     }
 
     // Initialize services
-    // const redditService = new RedditService()
     const rssService = new RSSService()
     const analyticsService = new AnalyticsService()
 
     // Fetch data from all sources
     const [
-      tiktokTrends,
-      metaAds,
+      // tiktokTrends,
+      // metaAds,
       googleTrends,
-      // redditMentions,
       appleUpdates,
       privacyUpdates,
       martechUpdates,
@@ -50,10 +47,9 @@ export async function GET(request: Request) {
       adbeatData,
       mailChartsCampaigns
     ] = await Promise.all([
-      getTikTokTrends(),
-      getMetaAds(brandName),
+      // getTikTokTrends(),
+      // getMetaAds(brandName),
       getGoogleTrends([brandName, ...brandName.split(' ')]),
-      // redditService.getBrandMentions(brandName),
       rssService.getAppleUpdates(),
       rssService.getPrivacySandboxUpdates(),
       rssService.getMartechUpdates(),
@@ -76,22 +72,22 @@ export async function GET(request: Request) {
       await prisma.insight.createMany({
         data: [
           // Social Media Insights
-          ...tiktokTrends.map(trend => ({
-            workspaceId: workspace.id,
-            title: `TikTok Trend: ${trend.title}`,
-            summary: `Trending on TikTok with ${trend.views} views`,
-            confidence: 0.8,
-            source: 'TikTok',
-            data: JSON.parse(JSON.stringify(trend)) as any,
-          })),
-          ...metaAds.map(ad => ({
-            workspaceId: workspace.id,
-            title: `Meta Ad: ${ad.advertiser}`,
-            summary: `Active ad on ${ad.platform} with ${ad.impressions} impressions`,
-            confidence: 0.9,
-            source: 'Meta',
-            data: JSON.parse(JSON.stringify(ad)) as any,
-          })),
+          // ...tiktokTrends.map(trend => ({
+          //   workspaceId: workspace.id,
+          //   title: `TikTok Trend: ${trend.title}`,
+          //   summary: `Trending on TikTok with ${trend.views} views`,
+          //   confidence: 0.8,
+          //   source: 'TikTok',
+          //   data: JSON.parse(JSON.stringify(trend)) as any,
+          // })),
+          // ...metaAds.map(ad => ({
+          //   workspaceId: workspace.id,
+          //   title: `Meta Ad: ${ad.advertiser}`,
+          //   summary: `Active ad on ${ad.platform} with ${ad.impressions} impressions`,
+          //   confidence: 0.9,
+          //   source: 'Meta',
+          //   data: JSON.parse(JSON.stringify(ad)) as any,
+          // })),
           ...(trafficData ? [{
             workspaceId: workspace.id,
             title: 'Traffic Analysis',
@@ -121,10 +117,9 @@ export async function GET(request: Request) {
     }
 
     const rawResults = {
-      tiktokTrends,
-      metaAds,
+      // tiktokTrends,
+      // metaAds,
       googleTrends,
-      // redditMentions,
       appleUpdates,
       privacyUpdates,
       martechUpdates,
@@ -141,9 +136,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       social: {
-        tiktokTrends,
-        metaAds,
-        // redditMentions,
+        // tiktokTrends,
+        // metaAds,
         twitterMentions,
       },
       industry: {

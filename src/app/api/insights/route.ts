@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from 'next/server'
 import { getTikTokTrends } from '../../../lib/services/tiktok'
 import { getMetaAds } from '../../../lib/services/meta'

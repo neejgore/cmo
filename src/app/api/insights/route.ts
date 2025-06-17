@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getTikTokTrends } from '@/lib/services/tiktok'
-import { getMetaAds } from '@/lib/services/meta'
-import { getGoogleTrends } from '@/lib/services/google-trends'
-import { RedditService } from '@/lib/services/reddit'
-import { RSSService } from '@/lib/services/rss'
-import { AnalyticsService } from '@/lib/services/analytics'
-import { prisma } from '@/lib/prisma'
+import { getTikTokTrends } from '../../../lib/services/tiktok'
+import { getMetaAds } from '../../../lib/services/meta'
+import { getGoogleTrends } from '../../../lib/services/google-trends'
+import { RedditService } from '../../../lib/services/reddit'
+import { RSSService } from '../../../lib/services/rss'
+import { AnalyticsService } from '../../../lib/services/analytics'
+import { prisma } from '../../../lib/prisma'
 
 export async function GET(request: Request) {
   try {
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
             summary: `Trending on TikTok with ${trend.views} views`,
             confidence: 0.8,
             source: 'TikTok',
-            data: trend,
+            data: JSON.parse(JSON.stringify(trend)) as any,
           })),
           ...metaAds.map(ad => ({
             workspaceId: workspace.id,
@@ -75,7 +75,7 @@ export async function GET(request: Request) {
             summary: `Active ad on ${ad.platform} with ${ad.impressions} impressions`,
             confidence: 0.9,
             source: 'Meta',
-            data: ad,
+            data: JSON.parse(JSON.stringify(ad)) as any,
           })),
           ...redditMentions.map(mention => ({
             workspaceId: workspace.id,
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
             summary: `${mention.sentiment} sentiment in r/${mention.subreddit}`,
             confidence: 0.7,
             source: 'Reddit',
-            data: mention,
+            data: JSON.parse(JSON.stringify(mention)) as any,
           })),
 
           // Industry Updates
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
             summary: update.content.substring(0, 200),
             confidence: 0.95,
             source: 'Apple Developer News',
-            data: update,
+            data: JSON.parse(JSON.stringify(update)) as any,
           })),
           ...privacyUpdates.map(update => ({
             workspaceId: workspace.id,
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
             summary: update.content.substring(0, 200),
             confidence: 0.9,
             source: 'Chromium Blog',
-            data: update,
+            data: JSON.parse(JSON.stringify(update)) as any,
           })),
           ...martechUpdates.map(update => ({
             workspaceId: workspace.id,
@@ -109,7 +109,7 @@ export async function GET(request: Request) {
             summary: update.content.substring(0, 200),
             confidence: 0.85,
             source: update.source,
-            data: update,
+            data: JSON.parse(JSON.stringify(update)) as any,
           })),
 
           // Analytics Insights
@@ -119,7 +119,7 @@ export async function GET(request: Request) {
             summary: `${trafficData.totalVisits.toLocaleString()} total visits`,
             confidence: 0.9,
             source: 'SimilarWeb',
-            data: trafficData,
+            data: JSON.parse(JSON.stringify(trafficData)) as any,
           }] : []),
           ...(adSpendData ? [{
             workspaceId: workspace.id,
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
             summary: `$${adSpendData.totalSpend.toLocaleString()} total spend`,
             confidence: 0.85,
             source: 'Adbeat',
-            data: adSpendData,
+            data: JSON.parse(JSON.stringify(adSpendData)) as any,
           }] : []),
           ...(competitorAnalysis ? [{
             workspaceId: workspace.id,
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
             summary: `${competitorAnalysis.competitors.length} competitors identified`,
             confidence: 0.9,
             source: 'SimilarWeb',
-            data: competitorAnalysis,
+            data: JSON.parse(JSON.stringify(competitorAnalysis)) as any,
           }] : []),
         ],
       })

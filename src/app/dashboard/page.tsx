@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useSession } from 'next-auth/react'
-import InsightsGrid from '@/components/insights/InsightsGrid'
+import InsightsGrid from '../../components/insights/InsightsGrid'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient()
@@ -24,7 +24,7 @@ export default function DashboardPage() {
               Last updated: {new Date().toLocaleTimeString()}
             </span>
             <button
-              onClick={() => queryClient.invalidateQueries(['insights'])}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['insights'] })}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
             >
               Refresh

@@ -29,7 +29,6 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
     queryKey: ['insights', brandName, domain],
     queryFn: () => fetchInsights(brandName, domain),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 30, // 30 minutes
   })
 
   if (isLoading) {

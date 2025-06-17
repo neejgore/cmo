@@ -1,4 +1,6 @@
 export function getTikTokTrends() {
-  // TODO: Implement real TikTok trends fetching
-  return [];
+  // Placeholder data with expected properties
+  return [
+    { title: "Sample Trend", views: 1000 }
+  ];
 } 

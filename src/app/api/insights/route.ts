@@ -30,37 +30,29 @@ export async function GET(request: Request) {
     const rssService = new RSSService()
     const analyticsService = new AnalyticsService()
 
-    // Fetch data from all sources
+    // Robust error handling for each integration
     const [
-      // tiktokTrends,
-      // metaAds,
       googleTrends,
       appleUpdates,
       privacyUpdates,
       martechUpdates,
-      // emailCampaigns,
       trafficData,
       adSpendData,
       competitorAnalysis,
       twitterMentions,
       explodingTopics,
-      adbeatData,
-      // mailChartsCampaigns
+      adbeatData
     ] = await Promise.all([
-      // getTikTokTrends(),
-      // getMetaAds(brandName),
-      getGoogleTrends([brandName, ...brandName.split(' ')]),
-      rssService.getAppleUpdates(),
-      rssService.getPrivacySandboxUpdates(),
-      rssService.getMartechUpdates(),
-      // rssService.getEmailCampaigns(domain),
-      analyticsService.getTrafficData(domain),
-      analyticsService.getAdSpendData(domain),
-      analyticsService.getCompetitorAnalysis(domain),
-      getTwitterMentions(brandName),
-      getExplodingTopics(brandName),
-      getAdbeatData(domain),
-      // getMailChartsCampaigns(domain)
+      (async () => { try { return await getGoogleTrends([brandName, ...brandName.split(' ')]); } catch (e) { console.error('Google Trends error:', e); return []; } })(),
+      (async () => { try { return await rssService.getAppleUpdates(); } catch (e) { console.error('Apple Updates error:', e); return []; } })(),
+      (async () => { try { return await rssService.getPrivacySandboxUpdates(); } catch (e) { console.error('Privacy Updates error:', e); return []; } })(),
+      (async () => { try { return await rssService.getMartechUpdates(); } catch (e) { console.error('Martech Updates error:', e); return []; } })(),
+      (async () => { try { return await analyticsService.getTrafficData(domain); } catch (e) { console.error('Traffic Data error:', e); return null; } })(),
+      (async () => { try { return await analyticsService.getAdSpendData(domain); } catch (e) { console.error('Ad Spend Data error:', e); return null; } })(),
+      (async () => { try { return await analyticsService.getCompetitorAnalysis(domain); } catch (e) { console.error('Competitor Analysis error:', e); return null; } })(),
+      (async () => { try { return await getTwitterMentions(brandName); } catch (e) { console.error('Twitter API error:', e); return []; } })(),
+      (async () => { try { return await getExplodingTopics(brandName); } catch (e) { console.error('Exploding Topics error:', e); return []; } })(),
+      (async () => { try { return await getAdbeatData(domain); } catch (e) { console.error('Adbeat Data error:', e); return null; } })(),
     ])
 
     // Store insights in database
@@ -71,23 +63,6 @@ export async function GET(request: Request) {
     if (workspace) {
       await prisma.insight.createMany({
         data: [
-          // Social Media Insights
-          // ...tiktokTrends.map(trend => ({
-          //   workspaceId: workspace.id,
-          //   title: `TikTok Trend: ${trend.title}`,
-          //   summary: `Trending on TikTok with ${trend.views} views`,
-          //   confidence: 0.8,
-          //   source: 'TikTok',
-          //   data: JSON.parse(JSON.stringify(trend)) as any,
-          // })),
-          // ...metaAds.map(ad => ({
-          //   workspaceId: workspace.id,
-          //   title: `Meta Ad: ${ad.advertiser}`,
-          //   summary: `Active ad on ${ad.platform} with ${ad.impressions} impressions`,
-          //   confidence: 0.9,
-          //   source: 'Meta',
-          //   data: JSON.parse(JSON.stringify(ad)) as any,
-          // })),
           ...(trafficData ? [{
             workspaceId: workspace.id,
             title: 'Traffic Analysis',
@@ -117,27 +92,21 @@ export async function GET(request: Request) {
     }
 
     const rawResults = {
-      // tiktokTrends,
-      // metaAds,
       googleTrends,
       appleUpdates,
       privacyUpdates,
       martechUpdates,
-      // emailCampaigns,
       trafficData,
       adSpendData,
       competitorAnalysis,
       twitterMentions,
       explodingTopics,
       adbeatData,
-      // mailChartsCampaigns
     }
     const intelligence = await interpretInsights(rawResults)
 
     return NextResponse.json({
       social: {
-        // tiktokTrends,
-        // metaAds,
         twitterMentions,
       },
       industry: {
@@ -151,10 +120,6 @@ export async function GET(request: Request) {
         adSpendData,
         competitorAnalysis,
         adbeatData,
-      },
-      email: {
-        // campaigns: emailCampaigns,
-        // mailChartsCampaigns,
       },
       intelligence,
     })

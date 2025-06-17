@@ -1,15 +1,15 @@
 'use client'
 
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import InsightsGrid from '../../components/insights/InsightsGrid';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 export const dynamic = "force-dynamic";
 
-import React from 'react'
-import { useSearchParams } from 'next/navigation'
-import InsightsGrid from '../../components/insights/InsightsGrid'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+const queryClient = new QueryClient();
 
-const queryClient = new QueryClient()
-
-export default function DashboardPage() {
+function DashboardPageContent() {
   const searchParams = useSearchParams();
   const brandName = searchParams.get('brand') || '';
   const domain = searchParams.get('domain') || '';
@@ -44,5 +44,13 @@ export default function DashboardPage() {
         </div>
       </div>
     </QueryClientProvider>
-  )
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardPageContent />
+    </Suspense>
+  );
 } 

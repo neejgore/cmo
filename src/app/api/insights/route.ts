@@ -42,6 +42,20 @@ function safeJsonParse(text: string, context: string) {
   }
 }
 
+async function getRealTimeTrendsCategory(code: number | null): Promise<string> {
+  // Map Google Trends category code to realTimeTrends string category
+  // Fallback to 'all' if unknown
+  // Example mapping: 3 (Business) -> 'b', 16 (Entertainment) -> 'e', 7 (Science/Tech) -> 't', 45 (Health) -> 'm', 20 (Sports) -> 's', 0 (All) -> 'all', 1 (Top Stories) -> 'h'
+  if (!code) return 'all';
+  if ([3, 12, 13, 14, 15].includes(code)) return 'b'; // Business
+  if ([16, 17, 18, 19].includes(code)) return 'e'; // Entertainment
+  if ([7, 8, 9, 10, 11].includes(code)) return 't'; // Science/Tech
+  if ([45, 46, 47, 48].includes(code)) return 'm'; // Health
+  if ([20, 21, 22, 23, 24].includes(code)) return 's'; // Sports
+  if ([0, 1].includes(code)) return 'all'; // All/Top Stories
+  return 'all';
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -94,56 +108,28 @@ export async function GET(request: Request) {
       value: item.value[0],
     })) || [];
     const top10States = [...states].sort((a, b) => b.value - a.value).slice(0, 10);
-    // Trending searches for industry (AI-mapped category)
-    let trendingSearches: any[] = [];
+    // Real-Time Trends for closest category
     let categoryCode = await getCategoryCodeForBrand(brandName);
+    const realTimeCategory = await getRealTimeTrendsCategory(categoryCode);
+    let realTimeTrends: any[] = [];
     try {
-      let dailyTrendsRaw = await googleTrends.dailyTrends({ geo: 'US', trendDate: new Date(), category: categoryCode || undefined });
-      if (typeof dailyTrendsRaw === 'string') {
-        const parsed = safeJsonParse(dailyTrendsRaw, 'dailyTrends_category');
-        if (!parsed) dailyTrendsRaw = { default: { trendingSearchesDays: [{ trendingSearches: [] }] } };
-        else dailyTrendsRaw = parsed;
+      let realTimeRaw = await googleTrends.realTimeTrends({ geo: 'US', category: realTimeCategory });
+      if (typeof realTimeRaw === 'string') {
+        const parsed = safeJsonParse(realTimeRaw, 'realTimeTrends');
+        if (!parsed) realTimeRaw = { storySummaries: { trendingStories: [] } };
+        else realTimeRaw = parsed;
       }
-      trendingSearches = dailyTrendsRaw?.default?.trendingSearchesDays?.[0]?.trendingSearches?.map((t: any) => ({
-        title: t.title.query,
-        articles: t.articles,
-        traffic: t.formattedTraffic,
+      realTimeTrends = realTimeRaw?.storySummaries?.trendingStories?.map((story: any) => ({
+        title: story.title,
+        articles: story.articles,
+        entityNames: story.entityNames,
+        image: story.image,
+        shareUrl: story.shareUrl,
       })) || [];
     } catch (e) {
-      console.log('No trending searches found for category', categoryCode, e);
-      // Fallback: try without category
-      try {
-        let dailyTrendsRaw = await googleTrends.dailyTrends({ geo: 'US', trendDate: new Date() });
-        if (typeof dailyTrendsRaw === 'string') {
-          const parsed = safeJsonParse(dailyTrendsRaw, 'dailyTrends_fallback');
-          if (!parsed) dailyTrendsRaw = { default: { trendingSearchesDays: [{ trendingSearches: [] }] } };
-          else dailyTrendsRaw = parsed;
-        }
-        trendingSearches = dailyTrendsRaw?.default?.trendingSearchesDays?.[0]?.trendingSearches?.map((t: any) => ({
-          title: t.title.query,
-          articles: t.articles,
-          traffic: t.formattedTraffic,
-        })) || [];
-      } catch (e2) {
-        console.log('No trending searches found for US fallback', e2);
-      }
+      console.log('No real-time trends found for category', realTimeCategory, e);
     }
-    // Related queries (top 5)
-    let relatedRaw = await googleTrends.relatedQueries({ keyword: brandName, geo: 'US' });
-    if (typeof relatedRaw === 'string') {
-      const parsed = safeJsonParse(relatedRaw, 'relatedQueries');
-      if (!parsed) relatedRaw = { default: { rankedList: [] } };
-      else relatedRaw = parsed;
-    }
-    const topRelated = relatedRaw?.default?.rankedList?.find((l: any) => l.title === 'Top')?.rankedKeyword || [];
-    const relatedQueries = topRelated.slice(0, 5).map((item: any) => ({
-      query: item.query,
-      value: item.value,
-    }));
-    if (relatedQueries.length === 0) {
-      console.log('No related queries found for', brandName);
-    }
-    return NextResponse.json({ trends, top10States, top10DMAs, bottom10DMAs, trendingSearches, relatedQueries });
+    return NextResponse.json({ trends, top10States, top10DMAs, bottom10DMAs, realTimeTrends });
   } catch (error) {
     console.error('Error fetching Google Trends:', error)
     return NextResponse.json(

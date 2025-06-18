@@ -139,6 +139,8 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
 
   const top10States: { state: string; geoCode: string; value: number }[] = Array.isArray(data?.top10States) ? data.top10States : []
 
+  const realTimeTrends = Array.isArray(data?.realTimeTrends) ? data.realTimeTrends : [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -155,26 +157,27 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
         <BarChart dmas={bottom10DMAs} title="Bottom 10 DMAs by Interest" />
       </div>
       <div>
-        <h3 className="font-semibold mb-2">Trending Searches (Industry)</h3>
-        {trendingSearches.length > 0 ? (
-          <ul className="space-y-1">
-            {trendingSearches.map((t, i) => (
-              <li key={i} className="flex items-center justify-between border-b pb-1">
-                <span>{t.title}</span>
-                <span className="text-xs text-gray-500">{t.traffic}</span>
+        <h3 className="font-semibold mb-2">Real-Time Trends (Category)</h3>
+        {realTimeTrends.length > 0 ? (
+          <ul className="space-y-2">
+            {realTimeTrends.map((story: any, i: number) => (
+              <li key={i} className="flex items-center space-x-4 border-b pb-2">
+                {story.image && (
+                  <img src={story.image} alt="story" className="w-12 h-12 object-cover rounded" />
+                )}
+                <div className="flex-1">
+                  <a href={story.shareUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-700 hover:underline">
+                    {story.title}
+                  </a>
+                  {story.entityNames && story.entityNames.length > 0 && (
+                    <div className="text-xs text-gray-500 mt-1">{story.entityNames.join(', ')}</div>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         ) : (
-          <div className="text-gray-500">No trending searches found.</div>
-        )}
-      </div>
-      <div>
-        <h3 className="font-semibold mb-2">Top Related Queries (Word Cloud)</h3>
-        {relatedQueries.length > 0 ? (
-          <WordCloud queries={relatedQueries} />
-        ) : (
-          <div className="text-gray-500">No related queries found.</div>
+          <div className="text-gray-500">No real-time trends found.</div>
         )}
       </div>
     </div>

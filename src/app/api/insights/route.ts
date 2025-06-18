@@ -40,6 +40,9 @@ export async function GET(request: Request) {
       query: item.query,
       value: item.value,
     }));
+    if (relatedQueries.length === 0) {
+      console.log('No related queries found for', brandName);
+    }
     return NextResponse.json({ trends, regions, relatedQueries });
   } catch (error) {
     console.error('Error fetching Google Trends:', error)

@@ -56,6 +56,30 @@ function LineGraph({ data }: { data: { timestamp: string; interest: number }[] }
   )
 }
 
+// Simple bar chart for top 10 states
+function BarChart({ regions }: { regions: { state: string; value: number }[] }) {
+  const top10 = [...regions].sort((a, b) => b.value - a.value).slice(0, 10)
+  const max = Math.max(...top10.map(r => r.value), 1)
+  return (
+    <svg width={400} height={180}>
+      {top10.map((region, i) => (
+        <g key={region.state}>
+          <rect
+            x={100}
+            y={20 + i * 15}
+            width={(region.value / max) * 250}
+            height={12}
+            fill="#2563eb"
+            rx={3}
+          />
+          <text x={95} y={30 + i * 15} fontSize={12} textAnchor="end">{region.state}</text>
+          <text x={110 + (region.value / max) * 250} y={30 + i * 15} fontSize={12} fill="#222">{region.value}</text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
 async function fetchInsights(brandName: string, domain: string) {
   const response = await fetch(
     `/api/insights?brand=${encodeURIComponent(brandName)}&domain=${encodeURIComponent(domain)}`
@@ -111,25 +135,19 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
     <div className="space-y-8">
       <div>
         <h3 className="font-semibold mb-2">Interest Over Time (US)</h3>
-        {/* State dropdown (for future per-state trends) */}
-        <div className="mb-2">
-          <label htmlFor="state-select" className="mr-2">State:</label>
-          <select
-            id="state-select"
-            value={stateToShow || ''}
-            onChange={e => setSelectedState(e.target.value)}
-            className="border rounded px-2 py-1"
-          >
-            {regions.map((region: { geoCode: string; state: string }) => (
-              <option key={region.geoCode} value={region.geoCode}>{region.state}</option>
-            ))}
-          </select>
-        </div>
         <LineGraph data={trendsArray} />
       </div>
       <div>
+        <h3 className="font-semibold mb-2">Top 10 States by Interest</h3>
+        <BarChart regions={regions} />
+      </div>
+      <div>
         <h3 className="font-semibold mb-2">Top Related Queries (Word Cloud)</h3>
-        <WordCloud queries={relatedQueries} />
+        {relatedQueries.length > 0 ? (
+          <WordCloud queries={relatedQueries} />
+        ) : (
+          <div className="text-gray-500">No related queries found.</div>
+        )}
       </div>
     </div>
   )

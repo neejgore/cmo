@@ -52,7 +52,8 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
     )
   }
 
-  const insights: Insight[] = (data?.trends || []).map((trend: any, i: number) => ({
+  const trendsArray = Array.isArray(data?.trends) ? data.trends : [];
+  const insights: Insight[] = trendsArray.map((trend: any, i: number) => ({
     id: `${trend.keyword}-${trend.timestamp || i}`,
     title: `Trend: ${trend.keyword}`,
     summary: `Interest: ${trend.interest} at ${trend.timestamp ? new Date(trend.timestamp).toLocaleDateString() : ''}`,

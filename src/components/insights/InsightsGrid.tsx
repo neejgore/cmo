@@ -198,6 +198,8 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
 
   const trendsSeries = Array.isArray(data?.trendsSeries) ? data.trendsSeries : [];
 
+  const twitterMentions = Array.isArray(data?.twitterMentions) ? data.twitterMentions : [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -235,6 +237,25 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
           </ul>
         ) : (
           <div className="text-gray-500">No real-time trends found.</div>
+        )}
+      </div>
+      <div>
+        <h3 className="font-semibold mb-2">Twitter Mentions</h3>
+        {twitterMentions.length > 0 ? (
+          <ul className="space-y-2">
+            {twitterMentions.map((tweet: any, i: number) => (
+              <li key={i} className="border-b pb-2">
+                <div className="flex items-center space-x-2">
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${tweet.sentiment === 'positive' ? 'bg-green-100 text-green-700' : tweet.sentiment === 'negative' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>{tweet.sentiment}</span>
+                  <span className="text-xs text-gray-500">@{tweet.author_id}</span>
+                  <span className="text-xs text-gray-400">{new Date(tweet.created_at).toLocaleString()}</span>
+                </div>
+                <div className="mt-1 text-sm text-gray-800">{tweet.text}</div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-gray-500">No recent tweets found.</div>
         )}
       </div>
     </div>

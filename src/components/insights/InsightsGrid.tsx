@@ -56,27 +56,29 @@ function LineGraph({ data }: { data: { timestamp: string; interest: number }[] }
   )
 }
 
-// Simple bar chart for top 10 states
-function BarChart({ regions }: { regions: { state: string; value: number }[] }) {
-  const top10 = [...regions].sort((a, b) => b.value - a.value).slice(0, 10)
-  const max = Math.max(...top10.map(r => r.value), 1)
+// Simple bar chart for top 10 or bottom 10 DMAs
+function BarChart({ dmas, title }: { dmas: { dma: string; value: number }[]; title: string }) {
+  const max = Math.max(...dmas.map(r => r.value), 1)
   return (
-    <svg width={400} height={180}>
-      {top10.map((region, i) => (
-        <g key={region.state}>
-          <rect
-            x={100}
-            y={20 + i * 15}
-            width={(region.value / max) * 250}
-            height={12}
-            fill="#2563eb"
-            rx={3}
-          />
-          <text x={95} y={30 + i * 15} fontSize={12} textAnchor="end">{region.state}</text>
-          <text x={110 + (region.value / max) * 250} y={30 + i * 15} fontSize={12} fill="#222">{region.value}</text>
-        </g>
-      ))}
-    </svg>
+    <div>
+      <h4 className="font-semibold mb-1">{title}</h4>
+      <svg width={400} height={dmas.length * 18 + 20}>
+        {dmas.map((region, i) => (
+          <g key={region.dma}>
+            <rect
+              x={100}
+              y={20 + i * 15}
+              width={(region.value / max) * 250}
+              height={12}
+              fill="#2563eb"
+              rx={3}
+            />
+            <text x={95} y={30 + i * 15} fontSize={12} textAnchor="end">{region.dma}</text>
+            <text x={110 + (region.value / max) * 250} y={30 + i * 15} fontSize={12} fill="#222">{region.value}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
   )
 }
 
@@ -131,6 +133,10 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
   // Related queries
   const relatedQueries = Array.isArray(data?.relatedQueries) ? data.relatedQueries : []
 
+  const top10DMAs: { dma: string; geoCode: string; value: number }[] = Array.isArray(data?.top10DMAs) ? data.top10DMAs : []
+  const bottom10DMAs: { dma: string; geoCode: string; value: number }[] = Array.isArray(data?.bottom10DMAs) ? data.bottom10DMAs : []
+  const trendingSearches: { title: string; traffic: string }[] = Array.isArray(data?.trendingSearches) ? data.trendingSearches : []
+
   return (
     <div className="space-y-8">
       <div>
@@ -138,8 +144,25 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
         <LineGraph data={trendsArray} />
       </div>
       <div>
-        <h3 className="font-semibold mb-2">Top 10 States by Interest</h3>
-        <BarChart regions={regions} />
+        <BarChart dmas={top10DMAs} title="Top 10 DMAs by Interest" />
+      </div>
+      <div>
+        <BarChart dmas={bottom10DMAs} title="Bottom 10 DMAs by Interest" />
+      </div>
+      <div>
+        <h3 className="font-semibold mb-2">Trending Searches (Industry)</h3>
+        {trendingSearches.length > 0 ? (
+          <ul className="space-y-1">
+            {trendingSearches.map((t, i) => (
+              <li key={i} className="flex items-center justify-between border-b pb-1">
+                <span>{t.title}</span>
+                <span className="text-xs text-gray-500">{t.traffic}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-gray-500">No trending searches found.</div>
+        )}
       </div>
       <div>
         <h3 className="font-semibold mb-2">Top Related Queries (Word Cloud)</h3>

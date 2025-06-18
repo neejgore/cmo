@@ -11,7 +11,7 @@ interface Insight {
   source: string
   confidence: number
   data: any
-  category: 'social' | 'industry' | 'analytics' | 'email'
+  category: 'trends'
 }
 
 async function fetchInsights(brandName: string, domain: string) {
@@ -52,44 +52,15 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
     )
   }
 
-  const insights: Insight[] = [
-    ...(data.social.tiktokTrends || []).map((trend: any) => ({
-      id: trend.id,
-      title: `TikTok Trend: ${trend.title}`,
-      summary: `Trending with ${trend.views} views`,
-      source: 'TikTok',
-      confidence: 0.8,
-      data: trend,
-      category: 'social',
-    })),
-    ...(data.social.metaAds || []).map((ad: any) => ({
-      id: ad.id,
-      title: `Meta Ad: ${ad.advertiser}`,
-      summary: `Active on ${ad.platform}`,
-      source: 'Meta',
-      confidence: 0.9,
-      data: ad,
-      category: 'social',
-    })),
-    ...(data.industry.appleUpdates || []).map((update: any) => ({
-      id: update.id,
-      title: `Apple Update: ${update.title}`,
-      summary: update.content.substring(0, 100),
-      source: 'Apple Developer News',
-      confidence: 0.95,
-      data: update,
-      category: 'industry',
-    })),
-    ...(data.analytics.trafficData ? [{
-      id: 'traffic',
-      title: 'Traffic Analysis',
-      summary: `${data.analytics.trafficData.totalVisits.toLocaleString()} total visits`,
-      source: 'SimilarWeb',
-      confidence: 0.9,
-      data: data.analytics.trafficData,
-      category: 'analytics',
-    }] : []),
-  ]
+  const insights: Insight[] = (data?.trends || []).map((trend: any, i: number) => ({
+    id: `${trend.keyword}-${trend.timestamp || i}`,
+    title: `Trend: ${trend.keyword}`,
+    summary: `Interest: ${trend.interest} at ${trend.timestamp ? new Date(trend.timestamp).toLocaleDateString() : ''}`,
+    source: 'Google Trends',
+    confidence: 0.8,
+    data: trend,
+    category: 'trends',
+  }))
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

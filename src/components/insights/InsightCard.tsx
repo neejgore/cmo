@@ -9,7 +9,7 @@ interface InsightCardProps {
   source: string
   confidence: number
   data: any
-  category: 'social' | 'industry' | 'analytics' | 'email'
+  category: 'social' | 'industry' | 'analytics' | 'email' | 'trends'
 }
 
 const categoryColors = {
@@ -17,6 +17,7 @@ const categoryColors = {
   industry: 'bg-purple-50 border-purple-200',
   analytics: 'bg-green-50 border-green-200',
   email: 'bg-yellow-50 border-yellow-200',
+  trends: 'bg-orange-50 border-orange-200',
 }
 
 const categoryIcons = {
@@ -24,6 +25,7 @@ const categoryIcons = {
   industry: '📰',
   analytics: '📊',
   email: '📧',
+  trends: '📈',
 }
 
 export default function InsightCard({

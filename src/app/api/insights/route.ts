@@ -17,10 +17,25 @@ async function getCategoryCodeForBrand(brand: string): Promise<number | null> {
       max_tokens: 10,
       temperature: 0,
     });
-    const code = parseInt(completion.choices[0].message.content?.trim() || '', 10);
+    const rawContent = completion.choices[0].message.content?.trim() || '';
+    console.log('OpenAI category mapping raw response:', rawContent);
+    const code = parseInt(rawContent, 10);
     return isNaN(code) ? null : code;
   } catch (e) {
     console.log('OpenAI category mapping failed', e);
+    return null;
+  }
+}
+
+function safeJsonParse(text: string, context: string) {
+  if (text.trim().startsWith('<')) {
+    console.error(`[${context}] Non-JSON response (likely HTML):`, text.slice(0, 200));
+    return null;
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error(`[${context}] Failed to parse JSON:`, e, text.slice(0, 200));
     return null;
   }
 }
@@ -37,9 +52,13 @@ export async function GET(request: Request) {
       )
     }
     // Interest over time
-    const trendsRaw = await getGoogleTrends([brandName, ...brandName.split(' ')]);
-    const trendsObj = typeof trendsRaw === 'string' ? JSON.parse(trendsRaw) : trendsRaw;
-    const timeline = trendsObj?.default?.timelineData || [];
+    let trendsRaw: any = await getGoogleTrends([brandName, ...brandName.split(' ')]);
+    if (typeof trendsRaw === 'string') {
+      const parsed = safeJsonParse(trendsRaw, 'interestOverTime');
+      if (!parsed) trendsRaw = null;
+      else trendsRaw = parsed;
+    }
+    const timeline = trendsRaw?.default?.timelineData || [];
     const trends = timeline.map((item: any) => ({
       keyword: brandName,
       interest: item.value[0],
@@ -47,9 +66,13 @@ export async function GET(request: Request) {
       formattedTime: item.formattedTime,
     }));
     // Interest by DMA
-    const dmaRaw = await googleTrends.interestByRegion({ keyword: brandName, geo: 'US', resolution: 'DMA' });
-    const dmaObj = typeof dmaRaw === 'string' ? JSON.parse(dmaRaw) : dmaRaw;
-    const dmas = dmaObj?.default?.geoMapData?.map((item: any) => ({
+    let dmaRaw = await googleTrends.interestByRegion({ keyword: brandName, geo: 'US', resolution: 'DMA' });
+    if (typeof dmaRaw === 'string') {
+      const parsed = safeJsonParse(dmaRaw, 'interestByRegion_DMA');
+      if (!parsed) dmaRaw = { default: { geoMapData: [] } };
+      else dmaRaw = parsed;
+    }
+    const dmas = dmaRaw?.default?.geoMapData?.map((item: any) => ({
       dma: item.geoName,
       geoCode: item.geoCode,
       value: item.value[0],
@@ -57,9 +80,13 @@ export async function GET(request: Request) {
     const top10DMAs = [...dmas].sort((a, b) => b.value - a.value).slice(0, 10);
     const bottom10DMAs = [...dmas].sort((a, b) => a.value - b.value).slice(0, 10);
     // Interest by state (REGION)
-    const regionRaw = await googleTrends.interestByRegion({ keyword: brandName, geo: 'US', resolution: 'REGION' });
-    const regionObj = typeof regionRaw === 'string' ? JSON.parse(regionRaw) : regionRaw;
-    const states = regionObj?.default?.geoMapData?.map((item: any) => ({
+    let regionRaw = await googleTrends.interestByRegion({ keyword: brandName, geo: 'US', resolution: 'REGION' });
+    if (typeof regionRaw === 'string') {
+      const parsed = safeJsonParse(regionRaw, 'interestByRegion_REGION');
+      if (!parsed) regionRaw = { default: { geoMapData: [] } };
+      else regionRaw = parsed;
+    }
+    const states = regionRaw?.default?.geoMapData?.map((item: any) => ({
       state: item.geoName,
       geoCode: item.geoCode,
       value: item.value[0],
@@ -69,9 +96,13 @@ export async function GET(request: Request) {
     let trendingSearches: any[] = [];
     let categoryCode = await getCategoryCodeForBrand(brandName);
     try {
-      const dailyTrendsRaw = await googleTrends.dailyTrends({ geo: 'US', trendDate: new Date(), category: categoryCode || undefined });
-      const dailyTrendsObj = typeof dailyTrendsRaw === 'string' ? JSON.parse(dailyTrendsRaw) : dailyTrendsRaw;
-      trendingSearches = dailyTrendsObj?.default?.trendingSearchesDays?.[0]?.trendingSearches?.map((t: any) => ({
+      let dailyTrendsRaw = await googleTrends.dailyTrends({ geo: 'US', trendDate: new Date(), category: categoryCode || undefined });
+      if (typeof dailyTrendsRaw === 'string') {
+        const parsed = safeJsonParse(dailyTrendsRaw, 'dailyTrends_category');
+        if (!parsed) dailyTrendsRaw = { default: { trendingSearchesDays: [{ trendingSearches: [] }] } };
+        else dailyTrendsRaw = parsed;
+      }
+      trendingSearches = dailyTrendsRaw?.default?.trendingSearchesDays?.[0]?.trendingSearches?.map((t: any) => ({
         title: t.title.query,
         articles: t.articles,
         traffic: t.formattedTraffic,
@@ -80,9 +111,13 @@ export async function GET(request: Request) {
       console.log('No trending searches found for category', categoryCode, e);
       // Fallback: try without category
       try {
-        const dailyTrendsRaw = await googleTrends.dailyTrends({ geo: 'US', trendDate: new Date() });
-        const dailyTrendsObj = typeof dailyTrendsRaw === 'string' ? JSON.parse(dailyTrendsRaw) : dailyTrendsRaw;
-        trendingSearches = dailyTrendsObj?.default?.trendingSearchesDays?.[0]?.trendingSearches?.map((t: any) => ({
+        let dailyTrendsRaw = await googleTrends.dailyTrends({ geo: 'US', trendDate: new Date() });
+        if (typeof dailyTrendsRaw === 'string') {
+          const parsed = safeJsonParse(dailyTrendsRaw, 'dailyTrends_fallback');
+          if (!parsed) dailyTrendsRaw = { default: { trendingSearchesDays: [{ trendingSearches: [] }] } };
+          else dailyTrendsRaw = parsed;
+        }
+        trendingSearches = dailyTrendsRaw?.default?.trendingSearchesDays?.[0]?.trendingSearches?.map((t: any) => ({
           title: t.title.query,
           articles: t.articles,
           traffic: t.formattedTraffic,
@@ -92,9 +127,13 @@ export async function GET(request: Request) {
       }
     }
     // Related queries (top 5)
-    const relatedRaw = await googleTrends.relatedQueries({ keyword: brandName, geo: 'US' });
-    const relatedObj = typeof relatedRaw === 'string' ? JSON.parse(relatedRaw) : relatedRaw;
-    const topRelated = relatedObj?.default?.rankedList?.find((l: any) => l.title === 'Top')?.rankedKeyword || [];
+    let relatedRaw = await googleTrends.relatedQueries({ keyword: brandName, geo: 'US' });
+    if (typeof relatedRaw === 'string') {
+      const parsed = safeJsonParse(relatedRaw, 'relatedQueries');
+      if (!parsed) relatedRaw = { default: { rankedList: [] } };
+      else relatedRaw = parsed;
+    }
+    const topRelated = relatedRaw?.default?.rankedList?.find((l: any) => l.title === 'Top')?.rankedKeyword || [];
     const relatedQueries = topRelated.slice(0, 5).map((item: any) => ({
       query: item.query,
       value: item.value,

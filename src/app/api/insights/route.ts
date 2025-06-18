@@ -19,8 +19,10 @@ async function getCategoryCodeForBrand(brand: string): Promise<number | null> {
     });
     const rawContent = completion.choices[0].message.content?.trim() || '';
     console.log('OpenAI category mapping raw response:', rawContent);
-    const code = parseInt(rawContent, 10);
-    return isNaN(code) ? null : code;
+    // Extract number in parentheses, e.g. (901)
+    const match = rawContent.match(/\((\d+)\)/);
+    const code = match ? parseInt(match[1], 10) : null;
+    return code;
   } catch (e) {
     console.log('OpenAI category mapping failed', e);
     return null;

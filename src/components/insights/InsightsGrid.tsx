@@ -137,11 +137,16 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
   const bottom10DMAs: { dma: string; geoCode: string; value: number }[] = Array.isArray(data?.bottom10DMAs) ? data.bottom10DMAs : []
   const trendingSearches: { title: string; traffic: string }[] = Array.isArray(data?.trendingSearches) ? data.trendingSearches : []
 
+  const top10States: { state: string; geoCode: string; value: number }[] = Array.isArray(data?.top10States) ? data.top10States : []
+
   return (
     <div className="space-y-8">
       <div>
         <h3 className="font-semibold mb-2">Interest Over Time (US)</h3>
         <LineGraph data={trendsArray} />
+      </div>
+      <div>
+        <BarChart dmas={top10States.map(s => ({ dma: s.state, value: s.value }))} title="Top 10 States by Interest" />
       </div>
       <div>
         <BarChart dmas={top10DMAs} title="Top 10 DMAs by Interest" />

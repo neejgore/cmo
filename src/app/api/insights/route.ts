@@ -44,10 +44,8 @@ function safeJsonParse(text: string, context: string) {
 
 async function getRealTimeTrendsCategory(code: number | null): Promise<string> {
   // Map Google Trends category code to realTimeTrends string category
-  // Fallback to 'all' if unknown
-  // Example mapping: 3 (Business) -> 'b', 16 (Entertainment) -> 'e', 7 (Science/Tech) -> 't', 45 (Health) -> 'm', 20 (Sports) -> 's', 0 (All) -> 'all', 1 (Top Stories) -> 'h'
   if (!code) return 'all';
-  if ([3, 12, 13, 14, 15].includes(code)) return 'b'; // Business
+  if ([3, 12, 13, 14, 15, 93].includes(code)) return 'b'; // Business (including 93)
   if ([16, 17, 18, 19].includes(code)) return 'e'; // Entertainment
   if ([7, 8, 9, 10, 11].includes(code)) return 't'; // Science/Tech
   if ([45, 46, 47, 48].includes(code)) return 'm'; // Health

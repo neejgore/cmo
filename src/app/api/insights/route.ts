@@ -56,6 +56,24 @@ async function getRealTimeTrendsCategory(code: number | null): Promise<string> {
   return 'all';
 }
 
+async function getTopCompetitors(brand: string): Promise<string[]> {
+  const prompt = `List the top 3 direct competitors to the brand "${brand}". Only return a comma-separated list of brand names, no explanations.`;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 30,
+      temperature: 0,
+    });
+    const raw = completion.choices[0].message.content?.trim() || '';
+    console.log('OpenAI competitors raw response:', raw);
+    return raw.split(',').map(s => s.trim()).filter(Boolean).slice(0, 3);
+  } catch (e) {
+    console.log('OpenAI competitor mapping failed', e);
+    return [];
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -67,19 +85,25 @@ export async function GET(request: Request) {
         { status: 400 }
       )
     }
-    // Interest over time
-    let trendsRaw: any = await getGoogleTrends([brandName, ...brandName.split(' ')]);
+    // Get competitors
+    const competitors = await getTopCompetitors(brandName);
+    // Interest over time for brand and competitors
+    const allBrands = [brandName, ...competitors];
+    let trendsRaw: any = await getGoogleTrends(allBrands);
     if (typeof trendsRaw === 'string') {
       const parsed = safeJsonParse(trendsRaw, 'interestOverTime');
       if (!parsed) trendsRaw = null;
       else trendsRaw = parsed;
     }
     const timeline = trendsRaw?.default?.timelineData || [];
-    const trends = timeline.map((item: any) => ({
-      keyword: brandName,
-      interest: item.value[0],
-      timestamp: new Date(Number(item.time) * 1000).toISOString(),
-      formattedTime: item.formattedTime,
+    // Each timelineData item has value: [brand, comp1, comp2, comp3]
+    const trendsSeries = allBrands.map((name, idx) => ({
+      name,
+      data: timeline.map((item: any) => ({
+        interest: item.value[idx],
+        timestamp: new Date(Number(item.time) * 1000).toISOString(),
+        formattedTime: item.formattedTime,
+      }))
     }));
     // Interest by DMA
     let dmaRaw = await googleTrends.interestByRegion({ keyword: brandName, geo: 'US', resolution: 'DMA' });
@@ -129,7 +153,7 @@ export async function GET(request: Request) {
     } catch (e) {
       console.log('No real-time trends found for category', realTimeCategory, e);
     }
-    return NextResponse.json({ trends, top10States, top10DMAs, bottom10DMAs, realTimeTrends });
+    return NextResponse.json({ trendsSeries, top10States, top10DMAs, bottom10DMAs, realTimeTrends });
   } catch (error) {
     console.error('Error fetching Google Trends:', error)
     return NextResponse.json(

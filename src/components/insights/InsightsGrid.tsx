@@ -82,6 +82,61 @@ function BarChart({ dmas, title }: { dmas: { dma: string; value: number }[]; tit
   )
 }
 
+// Multi-series line graph component
+const COLORS = ['#2563eb', '#eab308', '#ef4444', '#10b981'];
+function MultiLineGraph({ series }: { series: { name: string; data: { timestamp: string; interest: number }[] }[] }) {
+  if (!series.length || !series[0].data.length) return <div>No data</div>;
+  const width = 400, height = 160;
+  const allPoints = series.flatMap(s => s.data);
+  const maxInterest = Math.max(...allPoints.map(d => d.interest), 1);
+  const minInterest = Math.min(...allPoints.map(d => d.interest), 0);
+  const n = series[0].data.length;
+  return (
+    <div>
+      <svg width={width} height={height}>
+        {/* Axes */}
+        <line x1={40} y1={height-30} x2={width-10} y2={height-30} stroke="#888" />
+        <line x1={40} y1={20} x2={40} y2={height-30} stroke="#888" />
+        {/* Lines */}
+        {series.map((s, idx) => {
+          const points = s.data.map((d, i) => [
+            40 + (i / (n - 1)) * (width - 60),
+            height - 30 - ((d.interest - minInterest) / (maxInterest - minInterest || 1)) * (height - 50)
+          ]);
+          return (
+            <polyline
+              key={s.name}
+              fill="none"
+              stroke={COLORS[idx % COLORS.length]}
+              strokeWidth={2}
+              points={points.map(p => p.join(",")).join(" ")}
+            />
+          );
+        })}
+        {/* Dots */}
+        {series.map((s, idx) => s.data.map((d, i) => {
+          const x = 40 + (i / (n - 1)) * (width - 60);
+          const y = height - 30 - ((d.interest - minInterest) / (maxInterest - minInterest || 1)) * (height - 50);
+          return <circle key={s.name + i} cx={x} cy={y} r={2} fill={COLORS[idx % COLORS.length]} />;
+        }))}
+        {/* Y axis labels */}
+        <text x={5} y={height-30} fontSize={10} fill="#888">{minInterest}</text>
+        <text x={5} y={30} fontSize={10} fill="#888">{maxInterest}</text>
+        {/* X axis label */}
+        <text x={width/2-30} y={height-5} fontSize={12} fill="#888">Time (last 30 days)</text>
+      </svg>
+      <div className="flex space-x-4 mt-2">
+        {series.map((s, idx) => (
+          <div key={s.name} className="flex items-center space-x-1">
+            <span className="inline-block w-3 h-3 rounded-full" style={{ background: COLORS[idx % COLORS.length] }}></span>
+            <span className="text-xs text-gray-700">{s.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 async function fetchInsights(brandName: string, domain: string) {
   const response = await fetch(
     `/api/insights?brand=${encodeURIComponent(brandName)}&domain=${encodeURIComponent(domain)}`
@@ -141,11 +196,13 @@ export default function InsightsGrid({ brandName, domain }: { brandName: string;
 
   const realTimeTrends = Array.isArray(data?.realTimeTrends) ? data.realTimeTrends : [];
 
+  const trendsSeries = Array.isArray(data?.trendsSeries) ? data.trendsSeries : [];
+
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="font-semibold mb-2">Interest Over Time (US)</h3>
-        <LineGraph data={trendsArray} />
+        <h3 className="font-semibold mb-2">Interest Over Time (US, Brand vs. Top Competitors)</h3>
+        <MultiLineGraph series={trendsSeries} />
       </div>
       <div>
         <BarChart dmas={top10States.map(s => ({ dma: s.state, value: s.value }))} title="Top 10 States by Interest" />
